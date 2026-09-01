@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dinosaur Education Mystery Mansion</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#101522;color:#fff}
+button,select,input{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:12px 18px;font-weight:700}
+.screen{min-height:100vh;padding:24px;display:none}.active{display:block}
+.panel{max-width:1100px;margin:auto;background:#1a2233;border:2px solid #3a4b68;border-radius:18px;padding:24px;box-shadow:0 10px 35px #0008}
+h1{font-size:clamp(34px,6vw,70px);margin:5px 0;color:#9bea55;text-shadow:3px 3px #111}h2{color:#b9d6ff}
+.center{text-align:center}.sub{color:#c8d1df}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.dino{padding:14px;border-radius:14px;background:#273249;border:2px solid #445675;min-height:90px}.dino.selected{border-color:#9bea55;background:#33452c}
+.dino b{display:block;font-size:18px}.dino span{color:#aebbd0;font-size:13px}
+input,select{width:100%;padding:12px;border-radius:10px;border:2px solid #445675;background:#111827;color:white;margin:6px 0 14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}.primary{background:#65c83d;color:#10200b}.secondary{background:#395b91;color:white}.danger{background:#b93d42;color:white}
+.role{padding:16px;border-radius:14px;border:2px solid #536783;background:#202a3c}.role h3{margin:0 0 7px}.role small{color:#b8c4d5}
+.role.normy{border-color:#5ca9e6}.role.elec{border-color:#e4c83e}.role.medic{border-color:#67d56b}.role.bonker{border-color:#ef5b4d}.role.shadow{border-color:#9c70ff}.role.yum{border-color:#f09a3e}
+.topbar{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.stat{background:#111827;border-radius:10px;padding:10px 14px}.map{position:relative;height:480px;background:#242d3e;border:3px solid #4b5c78;border-radius:16px;overflow:hidden;margin:15px 0}
+.room{position:absolute;background:#303b50;border:2px solid #5c6d88;border-radius:10px;padding:18px;text-align:center;font-weight:bold}
+.r1{left:4%;top:8%;width:27%;height:32%}.r2{right:4%;top:8%;width:27%;height:32%}.r3{left:35%;top:8%;width:30%;height:32%}.r4{left:4%;bottom:8%;width:27%;height:32%}.r5{right:4%;bottom:8%;width:27%;height:32%}.r6{left:35%;bottom:8%;width:30%;height:32%}
+.playerdot{position:absolute;padding:7px 10px;border-radius:50%;font-size:12px;background:#4da3ff;border:2px solid white;transform:translate(-50%,-50%)}
+.taskbar{height:18px;background:#111;border-radius:12px;overflow:hidden;border:1px solid #566}.taskfill{height:100%;background:#74d44b;width:0}
+.question{background:#111827;border-radius:14px;padding:20px;margin-top:15px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}.answers button{background:#33425a;color:white}.answers button:hover{background:#496486}
+.log{height:130px;overflow:auto;background:#0d1320;padding:10px;border-radius:10px;font-size:13px;color:#b9c6d8}
+.hidden{display:none!important}.meeting{background:#242d3e;border:2px solid #71829e;border-radius:14px;padding:18px}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;background:#3b4960;margin:3px}
+
+/* Enhanced game presentation */
+body{background:radial-gradient(circle at 50% 0%,#283652 0,#101522 55%,#090d15 100%);overflow-x:hidden}
+.screen{padding:18px}
+.panel{background:linear-gradient(145deg,#182235,#101725);border-color:#536783}
+.game-shell{max-width:1250px;margin:auto}
+.game-map{position:relative;height:680px;border:3px solid #647795;border-radius:22px;overflow:hidden;
+background:radial-gradient(circle at 50% 50%,#3a4659 0,#1c2534 55%,#101722 100%);}
+.game-map:before{content:"";position:absolute;inset:12px;border:2px dashed #68758b;border-radius:16px;opacity:.35}
+.map-world{position:absolute;left:0;top:0;width:1800px;height:1200px;transform-origin:0 0;will-change:transform;background:
+linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px);background-size:60px 60px}
+.mroom{position:absolute;background:linear-gradient(145deg,#3d4d65,#222d40);border:4px solid #7c8fae;border-radius:22px;
+padding:22px;text-align:center;box-shadow:0 14px 35px #0009,inset 0 1px 0 #ffffff18;z-index:2;font-size:20px}
+.mroom .roomicon{font-size:46px;display:block;margin-bottom:8px;filter:drop-shadow(0 4px 3px #0008)}.mroom small{color:#b8c4d6}
+.map-ob{left:70px;top:55px;width:470px;height:300px}.map-fossil{left:665px;top:55px;width:470px;height:300px}.map-lib{left:1260px;top:55px;width:470px;height:300px}
+.map-west{left:70px;top:445px;width:470px;height:300px}.map-hall{left:665px;top:445px;width:470px;height:300px}.map-east{left:1260px;top:445px;width:470px;height:300px}
+.map-lab{left:70px;top:835px;width:470px;height:300px}.map-kitchen{left:665px;top:835px;width:470px;height:300px}.map-green{left:1260px;top:835px;width:470px;height:300px}
+.dino-sprite{width:70px;height:70px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+font-size:43px;background:linear-gradient(145deg,#56677f,#293549);border:3px solid #8da0bd;box-shadow:0 5px 10px #0008}
+.sprite-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}.sprite-card{text-align:center;width:112px}
+.sprite-card b{display:block;font-size:12px;margin-top:4px}.sprite-card small{color:#9facbf}
+.reveal{max-width:900px;margin:auto;min-height:620px;display:flex;align-items:center;justify-content:center}
+.reveal-card{width:min(760px,95vw);border-radius:28px;padding:35px;text-align:center;border:4px solid #6b7b96;
+background:radial-gradient(circle at 50% 10%,#394861,#131b29 65%);box-shadow:0 25px 70px #000b}
+.reveal-role{font-size:clamp(42px,8vw,82px);font-weight:900;letter-spacing:2px;text-transform:uppercase}
+.reveal-dino{font-size:120px;filter:drop-shadow(0 10px 10px #0009)}
+.reveal-desc{font-size:20px;color:#d2d9e5;max-width:600px;margin:15px auto;line-height:1.5}
+.role-chip{display:inline-block;padding:7px 14px;border-radius:30px;background:#27344a;color:#dce6f5}
+.modal{position:fixed;inset:0;background:#050912dd;display:flex;align-items:center;justify-content:center;z-index:50;padding:18px}
+.modal-card{width:min(720px,96vw);background:#182235;border:3px solid #60728f;border-radius:22px;padding:25px;box-shadow:0 25px 80px #000}
+.task-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.task-art{font-size:58px}
+.answers button.correct{background:#397f45}.answers button.wrong{background:#8a3b43}.answers button:disabled{cursor:not-allowed;opacity:.9}
+.toast{position:fixed;right:20px;bottom:20px;background:#182235;border:2px solid #657795;padding:12px 16px;border-radius:12px;z-index:100;box-shadow:0 10px 30px #0009}
+.player-marker{position:absolute;z-index:10;transform:translate(-50%,-50%);text-align:center;transition:all .7s ease}
+.player-marker .mini{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#34445c;border:3px solid white;font-size:27px}
+.player-marker small{display:block;background:#111a;color:white;padding:2px 5px;border-radius:5px;font-size:10px;white-space:nowrap}
+.ability-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.ability{background:#202c40;border:2px solid #475a77;border-radius:10px;padding:10px;text-align:center}.ability b{display:block}.ability span{font-size:22px}
+
+/* Mansion polish: textured floors, interior occlusion, task stations and meeting controls */
+#world{background-color:#263142;background-image:radial-gradient(circle at 20px 20px,rgba(255,255,255,.035) 0 2px,transparent 2.5px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:40px 40px,80px 80px,80px 80px}
+.mroom{background-color:#3a4657;background-image:linear-gradient(135deg,rgba(255,255,255,.035) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.035) 50%,rgba(255,255,255,.035) 75%,transparent 75%);background-size:34px 34px}
+.mroom:after{content:"";position:absolute;inset:10px;border:2px solid rgba(255,255,255,.06);border-radius:15px;pointer-events:none}
+.room-roof{position:absolute;z-index:30;border-radius:18px;background:linear-gradient(145deg,#56667d,#2b3547);border:5px solid #8ea0bb;box-shadow:0 18px 35px #000b,inset 0 1px 0 #ffffff22;display:flex;align-items:center;justify-content:center;color:#e8edf5;font-weight:900;font-size:24px;letter-spacing:1px;transition:opacity .18s,filter .18s;pointer-events:none}
+.room-roof:before{content:"INTERIOR HIDDEN";opacity:.55;font-size:12px;letter-spacing:2px;padding:8px 12px;border:1px solid #b7c4d8;border-radius:8px;background:#10172288}
+.room-roof.inside{opacity:0;pointer-events:none}
+.map-vent{position:absolute;z-index:13;width:70px;height:42px;border-radius:50%;background:repeating-linear-gradient(0deg,#15191d 0 4px,#66717a 4px 7px);border:3px solid #9ba9b3;box-shadow:0 5px 10px #000a;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#bfe0ef;transform:translate(-50%,-50%)}
+.map-task{position:absolute;z-index:14;width:56px;height:56px;border-radius:14px;background:linear-gradient(145deg,#f0c85a,#9a6722);border:3px solid #ffe9a1;box-shadow:0 8px 16px #0009,inset 0 2px 0 #fff7;display:flex;align-items:center;justify-content:center;font-size:28px;transform:translate(-50%,-50%);transition:transform .15s,filter .15s}
+.map-task.done{filter:grayscale(1);opacity:.45}
+.map-task.near{transform:translate(-50%,-50%) scale(1.12);box-shadow:0 0 0 5px #9bea55aa,0 8px 18px #000b}
+.task-label{position:absolute;top:58px;font-size:10px;background:#101722e8;padding:3px 6px;border-radius:5px;white-space:nowrap}
+.proximity{font-size:13px;color:#b9c6d8;text-align:center;min-height:20px;margin-top:5px}
+#emergencyBtn{background:#e5a42f;color:#1b1305;border:2px solid #ffd875}
+#reportBodyBtn{background:#b93d42;color:#fff}
+
+/* Rich room interiors and low-poly lab scenery */
+.room-interior{position:absolute;z-index:4;pointer-events:none;border-radius:16px;overflow:hidden;box-shadow:inset 0 0 30px #0008}
+.lab-floor{position:absolute;inset:0;background-color:#25313c;background-image:linear-gradient(30deg,#ffffff08 12%,transparent 12.5%,transparent 87%,#ffffff08 87.5%,#ffffff08),linear-gradient(150deg,#ffffff08 12%,transparent 12.5%,transparent 87%,#ffffff08 87.5%,#ffffff08);background-size:32px 32px}
+.lab-glow{position:absolute;border-radius:50%;background:#5ce1ff33;filter:blur(10px);width:120px;height:120px}
+.clone-bank{position:absolute;display:flex;gap:12px;align-items:end}
+.clone-tank{width:54px;height:112px;border:4px solid #91a7ba;border-radius:24px 24px 14px 14px;background:linear-gradient(180deg,#a8d7e733,#2bc8e033 55%,#0c344655);box-shadow:inset 0 0 18px #65eaff55,0 5px 12px #0008;position:relative}
+.clone-tank:before{content:'';position:absolute;left:12px;top:13px;width:22px;height:64px;border-radius:50%;background:#9fe6ff33;border:2px solid #d7f7ff55}
+.clone-tank:after{content:'DNA';position:absolute;bottom:7px;left:0;right:0;text-align:center;font-size:9px;color:#bfeeff;font-weight:900;letter-spacing:1px}
+.lab-console{position:absolute;width:120px;height:54px;border-radius:10px;background:linear-gradient(#4d6172,#202c38);border:3px solid #91a3b4;box-shadow:0 6px 10px #0008}
+.lab-console:before{content:'CLONE CONTROL';position:absolute;left:9px;top:7px;color:#8ff2ff;font-size:8px;font-weight:900}
+.lab-console:after{content:'●  ●  ▬';position:absolute;left:10px;bottom:8px;color:#a9ff9a;font-size:11px;letter-spacing:4px}
+.room-detail{position:absolute;z-index:5;pointer-events:none;opacity:.95}
+.pipe{height:7px;background:#8495a5;border:2px solid #25303b;border-radius:8px;box-shadow:0 3px 5px #0007}
+.specimen{position:absolute;width:22px;height:38px;border-radius:50% 50% 40% 40%;background:#6dd4c1aa;border:2px solid #b7fff0;box-shadow:0 0 10px #55ffe044}
+.lab-sign{position:absolute;z-index:6;padding:5px 8px;border-radius:6px;background:#111b26dd;border:1px solid #6fe6ff;color:#a9efff;font-size:10px;font-weight:900;letter-spacing:1px;pointer-events:none}
+.ground-stone{position:absolute;width:34px;height:18px;border-radius:50%;background:#68778788;box-shadow:inset 3px 2px 4px #ffffff18,0 3px 4px #0007;transform:rotate(18deg);pointer-events:none}
+.grass-patch{position:absolute;width:70px;height:34px;border-radius:50%;background:radial-gradient(ellipse,#668c4b66 0 45%,transparent 70%);pointer-events:none}
+
+
+.room-interior{background:linear-gradient(135deg,#273544,#16202c);border:3px solid #9aaec4;box-shadow:inset 0 0 35px #000b}.room-interior>*{position:absolute}.walllabel{background:#0d1620dd;border:1px solid #6c8299;color:#dbe8f5;padding:6px 9px;border-radius:6px;font-size:11px;font-weight:900;letter-spacing:.8px}.decor{border:2px solid #7891a9;background:#26384a;border-radius:10px;color:#9fe8ff;font-size:12px;font-weight:800;padding:12px}.telescope{width:95px;height:55px;transform:rotate(-15deg)}.starconsole{box-shadow:inset 0 0 15px #245c7d}.domefloor{font-size:30px;color:#8fe7ff}.fossil-skeleton{font-size:30px;color:#e5d3aa}.displaycase{width:100px;height:125px;border:4px solid #7ccde8;background:#7ccde822;text-align:center;padding-top:35px;color:#c7f4ff}.bookshelf{width:190px;height:52px;background:repeating-linear-gradient(90deg,#6b452c 0 18px,#a87b48 18px 22px);border:4px solid #39271d;color:#f6d8a2;padding:10px}.readingtable,.maptable,.ecotable,.counter,.stove,.fridge,.plantbed,.waterstation,.aquarium,.crate,.portrait,.bench,.grandrug{border-radius:12px}.readingtable{width:125px;height:70px;background:#74502e;border:4px solid #b18752;text-align:center;padding-top:18px}.maptable{width:210px;height:105px;background:#4d3a2c;border:5px solid #8e6b48;color:#d7c18b;text-align:center;padding-top:38px;font-weight:900}.portrait{font-size:58px}.crate{width:80px;height:65px;background:#6b4c2e;border:4px solid #9b7547;color:#ead2a2;text-align:center;padding-top:20px;font-size:11px}.grandrug{width:180px;height:125px;border-radius:50%;background:radial-gradient(circle,#8c2f3b,#4c1c28 65%,#24131a);border:6px solid #c49a54;text-align:center;padding-top:35px;font-weight:900;color:#ffe5b0}.bench{width:105px;height:28px;background:#67462e;border:3px solid #9d7548}.aquarium{width:145px;height:90px;background:#237b9b55;border:4px solid #79d9f0;padding:25px 12px;color:#c9f7ff}.ecotable{width:110px;height:80px;background:#31563b;border:3px solid #77ad74;color:#d5f0c8;text-align:center;padding-top:20px}.counter{width:210px;height:70px;background:#5b6670;border:4px solid #a9b4bc;color:#fff;padding:24px}.stove{width:115px;height:70px;background:#252a2e;border:4px solid #69757d;padding:20px}.fridge{width:85px;height:90px;background:#b9c9d1;border:4px solid #748590;color:#24323a;text-align:center;padding-top:35px}.plantbed{width:210px;height:75px;background:#314b2c;border:4px solid #668b52;font-size:30px;padding:18px}.waterstation{width:100px;height:70px;background:#285c73;border:3px solid #6fc8e8;color:#d5f7ff;text-align:center;padding-top:24px;font-weight:900}
+@media(max-width:700px){.game-map{height:650px}.answers{grid-template-columns:1fr}}
+
+/* Top-down movement + custom vector dinosaur sprites */
+#map{position:relative;overflow:hidden}
+.game-map{position:relative;touch-action:none;cursor:default}
+#camera{position:absolute;inset:0;overflow:hidden}
+#world{position:absolute;left:0;top:0;width:1800px;height:1200px;transform-origin:0 0;will-change:transform;background:radial-gradient(ellipse at center,rgba(83,101,127,.25),transparent 60%)}
+#world:before{content:"";position:absolute;left:555px;top:0;width:690px;height:1200px;background:linear-gradient(90deg,transparent 0 36%,rgba(123,139,163,.10) 36% 64%,transparent 64%);pointer-events:none}
+#world:after{content:"";position:absolute;left:0;top:365px;width:1800px;height:470px;background:linear-gradient(0deg,transparent 0 38%,rgba(123,139,163,.08) 38% 62%,transparent 62%);pointer-events:none}
+.move-hint{margin:8px 0;color:#b9c6d8;font-size:13px;text-align:center}
+.dino-character{position:absolute;width:78px;height:82px;transform:translate(-50%,-78%);z-index:20;pointer-events:none;transition:filter .15s}
+.dino-character svg{width:78px;height:78px;display:block;overflow:visible;filter:drop-shadow(0 6px 3px #0008)}
+.dino-character.walking svg .legA{animation:legA .16s infinite alternate}
+.dino-character.walking svg .legB{animation:legB .16s infinite alternate}
+.dino-character.walking svg .bodybob{animation:bob .16s infinite alternate}
+@keyframes legA{from{transform:rotate(12deg)}to{transform:rotate(-12deg)}}
+@keyframes legB{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+@keyframes bob{from{transform:translateY(1px)}to{transform:translateY(-2px)}}
+.dino-character.shadowing{opacity:.08}
+.dino-character.knocked{transform:translate(-50%,-50%) rotate(90deg);opacity:.88}
+.dino-character.knocked svg{filter:grayscale(.5) drop-shadow(0 4px 3px #0008)}
+.ko-badge{position:absolute;left:5px;top:-12px;background:#dce4ef;color:#121923;border:2px solid #111;border-radius:7px;padding:2px 5px;font-size:9px;font-weight:900}
+.dino-character:not(.knocked) .ko-badge{display:none}
+.name-tag{position:absolute;left:50%;top:-28px;transform:translateX(-50%);white-space:nowrap;background:#101722e8;border:1px solid #70809b;border-radius:5px;padding:2px 5px;color:#fff;font-size:9px}
+.dino-character.me .name-tag{border-color:#9bea55}
+.target-modal{position:fixed;inset:0;background:#050912dd;display:flex;align-items:center;justify-content:center;z-index:100;padding:18px}
+.target-card{width:min(780px,96vw);background:#182235;border:3px solid #60728f;border-radius:22px;padding:24px;box-shadow:0 25px 80px #000}
+.voting-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:14px}
+.vote-player{background:#26344a;color:#fff;border:2px solid #526784;border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;text-align:left}
+.vote-player:hover{border-color:#9bea55;background:#32445e}
+.vote-avatar{width:55px;height:55px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
+.vote-avatar svg{width:55px;height:55px}
+.joystick{position:absolute;left:18px;bottom:18px;width:118px;height:118px;border-radius:50%;background:#111827aa;border:2px solid #71829e;z-index:35;touch-action:none;display:none}
+.joystick:after{content:'';position:absolute;width:48px;height:48px;border-radius:50%;left:33px;top:33px;background:#5a6f91;border:2px solid #a9b8cf}
+@media(max-width:800px){.joystick{display:block}.game-map{height:650px}}
+.reveal-dino svg{width:150px;height:150px;filter:drop-shadow(0 12px 8px #0009)}
+.sprite-card svg{width:80px;height:80px}
+
+/* Mansion walls, doors, and closer Among Us-style camera */
+.game-map{background:radial-gradient(circle at 50% 50%,#46566b 0,#202b3b 52%,#0b111b 100%);box-shadow:inset 0 0 0 10px #0a1019,inset 0 0 80px #0009}
+.map-world{background:linear-gradient(90deg,rgba(255,255,255,.035) 2px,transparent 2px),linear-gradient(rgba(255,255,255,.035) 2px,transparent 2px),radial-gradient(circle at 50% 50%,#334257,#182333 70%);background-size:80px 80px,80px 80px,100% 100%}
+.mroom{background:linear-gradient(145deg,#52647b,#29384c);border:7px solid #111a27;box-shadow:0 0 0 3px #71859f,0 18px 38px #000b,inset 0 2px 0 #ffffff20;overflow:hidden}
+.mroom:after{content:"";position:absolute;inset:8px;border:2px solid #93a5bb55;border-radius:14px;pointer-events:none}
+.map-wall{position:absolute;background:linear-gradient(90deg,#0b111a,#46576e 35%,#111a27);border:2px solid #71839a;box-shadow:0 5px 12px #000b;z-index:6;pointer-events:none}
+.map-wall.h{height:24px}.map-wall.v{width:24px}
+.map-door{position:absolute;z-index:8;background:linear-gradient(180deg,#d5ad55,#765520);border:3px solid #382b14;border-radius:7px;box-shadow:0 5px 10px #0009;transition:.18s ease;pointer-events:none}
+.map-door.h{width:70px;height:25px}.map-door.v{width:25px;height:70px}
+.map-door.open{background:linear-gradient(180deg,#78d99b,#256b49);box-shadow:0 0 18px #65e6a055}.map-door.open:after{content:"OPEN";position:absolute;font-size:9px;font-weight:900;color:#eafff1;letter-spacing:1px;left:50%;top:50%;transform:translate(-50%,-50%)}
+.door-hint{position:absolute;z-index:12;background:#101722dd;color:#fff;border:2px solid #d5ad55;border-radius:9px;padding:5px 8px;font-size:11px;font-weight:800;pointer-events:none;white-space:nowrap;transform:translate(-50%,-100%);opacity:0;transition:.15s}
+.door-hint.show{opacity:1}
+</style>
+</head>
+<body>
+
+<section id="home" class="screen active">
+<div class="panel center">
+<h1>Dinosaur Education<br>Mystery Mansion</h1>
+<p class="sub">A dinosaur mystery game where your brain is part of the investigation!</p>
+<div class="actions">
+<button class="primary" onclick="show('setup')">PLAY ONLINE</button>
+<button class="secondary" onclick="show('how')">HOW TO PLAY</button><button class="secondary" onclick="show('collection');buildGallery()">DINOSAUR GALLERY</button>
+</div>
+<p class="sub">20 dinosaurs • 6 roles • grade-level questions • Mystery Mansion map</p>
+</div>
+</section>
+
+<section id="how" class="screen">
+<div class="panel">
+<h2>How to Play</h2>
+<ul>
+<li>Create a lobby or enter a lobby code.</li>
+<li>Choose a grade level and dinosaur. At least 4 players are required to start.</li>
+<li>Crewmates answer grade-level questions to complete tasks. Correct answers advance the task bar.</li>
+<li>Electricians and The Bonker can use vents. Medic can revive knocked-out players.</li>
+<li>The Bonker and Shadow Bonker try to knock players out. Shadow Bonker becomes invisible for 5 seconds after a knockout.</li>
+<li>Mr. Yum is neutral and wins by eating enough players.</li>
+<li>Reporting a knocked-out player and voting at meetings require answering a grade-level question first.</li>
+</ul>
+<button class="secondary" onclick="show('home')">BACK</button>
+</div>
+</section>
+
+<section id="setup" class="screen">
+<div class="panel">
+<h2>Lobby</h2>
+<div class="grid">
+<div><label>Your name</label><input id="name" value="Player 1"></div>
+<div><label>Grade level</label><select id="grade"><option>3rd Grade</option><option>4th Grade</option><option>5th Grade</option><option>6th Grade</option><option>7th Grade</option><option>8th Grade</option><option>9th Grade</option><option>10th Grade</option><option>11th Grade</option><option>12th Grade</option></select></div>
+</div>
+<label>Lobby code</label><input id="code" placeholder="Create a code, or enter one to join">
+<div class="actions"><button class="primary" onclick="createLobby()">CREATE LOBBY</button><button class="secondary" onclick="joinLobby()">JOIN LOBBY</button></div>
+<div id="lobby" class="hidden">
+<hr><h2 id="lobbyTitle"></h2><p>Players: <b id="count">1</b>/10 <span id="minimum"></span></p>
+<div id="players" class="grid"></div>
+<h2>Choose your dinosaur</h2><div id="dinos" class="grid"></div>
+<div class="actions"><button class="primary" id="startBtn" onclick="startGame()">START GAME</button><button class="secondary" onclick="addBot()">ADD BOT</button></div>
+</div>
+</div>
+</section>
+
+
+<section id="reveal" class="screen">
+  <div class="reveal">
+    <div class="reveal-card" id="revealCard">
+      <div class="sub">YOUR ROLE IS...</div>
+      <div class="reveal-dino" id="revealDino"></div>
+      <div class="reveal-role" id="revealRole">NORMY</div>
+      <div class="role-chip" id="revealTeam">CREWMATE</div>
+      <p class="reveal-desc" id="revealDesc"></p>
+      <button class="primary" onclick="enterGameFromReveal()">CONTINUE</button>
+    </div>
+  </div>
+</section>
+
+<section id="collection" class="screen">
+  <div class="panel">
+    <h2>🦕 Dinosaur Collection</h2>
+    <p class="sub">Choose a dinosaur for your next match. Each one has its own sprite.</p>
+    <div id="spriteGallery" class="sprite-row"></div>
+    <div class="actions"><button class="secondary" onclick="show('home')">BACK</button></div>
+  </div>
+</section>
+
+<section id="game" class="screen">
+<div class="panel">
+<div class="topbar"><h2>Dinosaur Education Mystery Mansion</h2><div class="stat">Lobby: <b id="gameCode"></b></div><div class="stat">Role: <b id="roleName"></b></div></div>
+<p>Tasks</p><div class="taskbar"><div id="taskfill" class="taskfill"></div></div>
+<div class="game-map" id="map"><div id="camera"><div id="world">
+  <div class="room-interior room-ob" style="left:70px;top:55px;width:470px;height:300px"><div class="decor telescope" style="left:55px;top:70px"></div><div class="decor starconsole" style="left:290px;top:70px">STAR MAP</div><div class="decor domefloor" style="left:155px;top:155px">✦ ✦ ✦</div><div class="walllabel" style="left:18px;top:18px">OBSERVATORY • CELESTIAL LAB</div></div>
+  <div class="room-roof" data-roof="observatory" style="left:70px;top:55px;width:470px;height:300px">OBSERVATORY</div>
+  <div class="room-interior room-fossil" style="left:665px;top:55px;width:470px;height:300px"><div class="fossil-skeleton" style="left:55px;top:105px">🦴━━━━🦴</div><div class="displaycase" style="left:300px;top:60px">FOSSIL<br>CASE</div><div class="walllabel" style="left:18px;top:18px">FOSSIL GALLERY • MESOZOIC ARCHIVE</div></div>
+  <div class="room-roof" data-roof="fossil" style="left:665px;top:55px;width:470px;height:300px">FOSSIL GALLERY</div>
+  <div class="room-interior room-library" style="left:1260px;top:55px;width:470px;height:300px"><div class="bookshelf" style="left:30px;top:65px">▥ ▥ ▥ ▥</div><div class="bookshelf" style="left:30px;top:185px">▥ ▥ ▥ ▥</div><div class="readingtable" style="left:275px;top:105px">📖</div><div class="walllabel" style="left:18px;top:18px">LIBRARY • DINO KNOWLEDGE ARCHIVE</div></div>
+  <div class="room-roof" data-roof="library" style="left:1260px;top:55px;width:470px;height:300px">LIBRARY</div>
+  <div class="room-interior room-west" style="left:70px;top:445px;width:470px;height:300px"><div class="maptable" style="left:70px;top:75px">MAP TABLE</div><div class="portrait" style="left:325px;top:65px">🦖</div><div class="crate" style="left:325px;top:180px">CRATE</div><div class="walllabel" style="left:18px;top:18px">WEST WING • EXPEDITION ROOM</div></div>
+  <div class="room-roof" data-roof="west" style="left:70px;top:445px;width:470px;height:300px">WEST WING</div>
+  <div class="room-interior room-hall" style="left:665px;top:445px;width:470px;height:300px"><div class="grandrug" style="left:145px;top:75px">MYSTERY<br>HALL</div><div class="bench" style="left:45px;top:220px"></div><div class="bench" style="left:310px;top:220px"></div><div class="walllabel" style="left:18px;top:18px">GRAND HALL • MEETING CHAMBER</div></div>
+  <div class="room-roof" data-roof="hall" style="left:665px;top:445px;width:470px;height:300px">GRAND HALL</div>
+  <div class="room-interior room-east" style="left:1260px;top:445px;width:470px;height:300px"><div class="aquarium" style="left:45px;top:65px">🫧 🐟</div><div class="ecotable" style="left:280px;top:85px">ECO<br>STATION</div><div class="walllabel" style="left:18px;top:18px">EAST WING • ECOLOGY CENTER</div></div>
+  <div class="room-roof" data-roof="east" style="left:1260px;top:445px;width:470px;height:300px">EAST WING</div>
+  <div class="room-interior" style="left:70px;top:835px;width:470px;height:300px">
+    <div class="lab-floor"></div><div class="lab-glow" style="left:45px;top:55px"></div><div class="lab-glow" style="left:310px;top:120px"></div>
+    <div class="lab-sign" style="left:16px;top:14px">DINO GENETICS LAB</div>
+    <div class="clone-bank" style="left:38px;top:86px"><div class="clone-tank"></div><div class="clone-tank"></div><div class="clone-tank"></div><div class="clone-tank"></div></div>
+    <div class="lab-console" style="left:290px;top:48px"></div><div class="lab-console" style="left:286px;top:188px"></div>
+    <div class="specimen" style="left:240px;top:72px"></div><div class="specimen" style="left:250px;top:78px;transform:scale(.7)"></div>
+    <div class="pipe" style="position:absolute;left:26px;top:245px;width:400px"></div><div class="pipe" style="position:absolute;left:105px;top:31px;width:7px;height:235px"></div>
+  </div>
+  <div class="room-roof" data-roof="lab" style="left:70px;top:835px;width:470px;height:300px">SCIENCE LAB</div>
+  <div class="room-interior room-kitchen" style="left:665px;top:835px;width:470px;height:300px"><div class="counter" style="left:35px;top:65px">LAB KITCHEN</div><div class="stove" style="left:300px;top:70px">🔥 🔥</div><div class="fridge" style="left:50px;top:185px">ICE</div><div class="walllabel" style="left:18px;top:18px">DINO KITCHEN • NUTRITION LAB</div></div>
+  <div class="room-roof" data-roof="kitchen" style="left:665px;top:835px;width:470px;height:300px">DINO KITCHEN</div>
+  <div class="room-interior room-green" style="left:1260px;top:835px;width:470px;height:300px"><div class="plantbed" style="left:35px;top:70px">🌿 🌱 🌿</div><div class="plantbed" style="left:35px;top:190px">🌱 🌿 🌱</div><div class="waterstation" style="left:300px;top:95px">WATER</div><div class="walllabel" style="left:18px;top:18px">GREENHOUSE • PALEOBOTANY GARDEN</div></div>
+  <div class="room-roof" data-roof="green" style="left:1260px;top:835px;width:470px;height:300px">GREENHOUSE</div>
+  <div class="ground-stone" style="left:585px;top:390px"></div><div class="ground-stone" style="left:1190px;top:395px;transform:rotate(-12deg)"></div>
+  <div class="ground-stone" style="left:575px;top:785px;transform:rotate(28deg)"></div><div class="ground-stone" style="left:1195px;top:790px;transform:rotate(-25deg)"></div>
+  <div class="grass-patch" style="left:560px;top:30px"></div><div class="grass-patch" style="left:1170px;top:1145px"></div>
+  <div class="map-vent" data-vent="v1" style="left:465px;top:205px">VENT</div><div class="map-vent" data-vent="v2" style="left:1060px;top:600px">VENT</div><div class="map-vent" data-vent="v3" style="left:1320px;top:970px">VENT</div><div class="map-vent" data-vent="v4" style="left:420px;top:960px">VENT</div>
+  <div class="map-task" data-task-id="t1" style="left:180px;top:180px">🔭<span class="task-label">Calibrate Telescope</span></div>
+  <div class="map-task" data-task-id="t2" style="left:900px;top:180px">🦴<span class="task-label">Catalog Fossil</span></div>
+  <div class="map-task" data-task-id="t3" style="left:1495px;top:180px">📚<span class="task-label">Sort Books</span></div>
+  <div class="map-task" data-task-id="t4" style="left:210px;top:575px">🗺️<span class="task-label">Study Map</span></div>
+  <div class="map-task" data-task-id="t5" style="left:900px;top:575px">🏛️<span class="task-label">Hall Display</span></div>
+  <div class="map-task" data-task-id="t6" style="left:1495px;top:575px">🌿<span class="task-label">Water Plants</span></div>
+  <div class="map-task" data-task-id="t7" style="left:200px;top:975px">🧪<span class="task-label">Analyze Sample</span></div>
+  <div class="map-task" data-task-id="t8" style="left:900px;top:975px">🍳<span class="task-label">Mix Ingredients</span></div>
+  <div class="map-task" data-task-id="t9" style="left:1495px;top:975px">🌱<span class="task-label">Plant Seedling</span></div>
+  <div class="map-task" data-task-id="t10" style="left:410px;top:250px">⭐<span class="task-label">Chart Constellation</span></div><div class="map-task" data-task-id="t11" style="left:1040px;top:250px">🪨<span class="task-label">Label Fossil Layer</span></div><div class="map-task" data-task-id="t12" style="left:1390px;top:250px">🗃️<span class="task-label">Archive Specimen</span></div><div class="map-task" data-task-id="t13" style="left:410px;top:650px">🧭<span class="task-label">Decode Expedition Map</span></div><div class="map-task" data-task-id="t14" style="left:1040px;top:650px">🏛️<span class="task-label">Restore Hall Display</span></div><div class="map-task" data-task-id="t15" style="left:1390px;top:650px">🧬<span class="task-label">Test Ecosystem</span></div><div class="map-task" data-task-id="t16" style="left:420px;top:1040px">🧬<span class="task-label">Sequence DNA</span></div><div class="map-task" data-task-id="t17" style="left:1040px;top:1040px">🥣<span class="task-label">Prepare Food Sample</span></div><div class="map-task" data-task-id="t18" style="left:1390px;top:1040px">🌱<span class="task-label">Grow Seed Culture</span></div>
+  <div class="mroom map-ob"><span class="roomicon">🔭</span>Observatory<small>Star charts • Telescope</small></div>
+  <div class="mroom map-fossil"><span class="roomicon">🦴</span>Fossil Gallery<small>Fossils • Skeletons</small></div>
+  <div class="mroom map-lib"><span class="roomicon">📚</span>Library<small>Books • Plaques</small></div>
+  <div class="mroom map-west"><span class="roomicon">🗺️</span>West Wing<small>Maps • History</small></div>
+  <div class="mroom map-hall"><span class="roomicon">🏛️</span>Grand Hall<small>Meetings • Main route</small></div>
+  <div class="mroom map-east"><span class="roomicon">🌿</span>East Wing<small>Plants • Ecology</small></div>
+  <div class="mroom map-lab"><span class="roomicon">🧪</span>Science Lab<small>Experiments • Bones</small></div>
+  <div class="mroom map-kitchen"><span class="roomicon">🍳</span>Dino Kitchen<small>Food • Chemistry</small></div>
+  <div class="mroom map-green"><span class="roomicon">🌱</span>Greenhouse<small>Plants • Biology</small></div>
+  <!-- solid mansion walls -->
+  <div class="map-wall h" style="left:70px;top:55px;width:470px"></div><div class="map-wall h" style="left:70px;top:331px;width:470px"></div><div class="map-wall v" style="left:70px;top:55px;height:300px"></div><div class="map-wall v" style="left:516px;top:55px;height:300px"></div>
+  <div class="map-wall h" style="left:665px;top:55px;width:470px"></div><div class="map-wall h" style="left:665px;top:331px;width:470px"></div><div class="map-wall v" style="left:665px;top:55px;height:300px"></div><div class="map-wall v" style="left:1111px;top:55px;height:300px"></div>
+  <div class="map-wall h" style="left:1260px;top:55px;width:470px"></div><div class="map-wall h" style="left:1260px;top:331px;width:470px"></div><div class="map-wall v" style="left:1260px;top:55px;height:300px"></div><div class="map-wall v" style="left:1706px;top:55px;height:300px"></div>
+  <div class="map-wall h" style="left:70px;top:445px;width:470px"></div><div class="map-wall h" style="left:70px;top:721px;width:470px"></div><div class="map-wall v" style="left:70px;top:445px;height:300px"></div><div class="map-wall v" style="left:516px;top:445px;height:300px"></div>
+  <div class="map-wall h" style="left:665px;top:445px;width:470px"></div><div class="map-wall h" style="left:665px;top:721px;width:470px"></div><div class="map-wall v" style="left:665px;top:445px;height:300px"></div><div class="map-wall v" style="left:1111px;top:445px;height:300px"></div>
+  <div class="map-wall h" style="left:1260px;top:445px;width:470px"></div><div class="map-wall h" style="left:1260px;top:721px;width:470px"></div><div class="map-wall v" style="left:1260px;top:445px;height:300px"></div><div class="map-wall v" style="left:1706px;top:445px;height:300px"></div>
+  <div class="map-wall h" style="left:70px;top:835px;width:470px"></div><div class="map-wall h" style="left:70px;top:1111px;width:470px"></div><div class="map-wall v" style="left:70px;top:835px;height:300px"></div><div class="map-wall v" style="left:516px;top:835px;height:300px"></div>
+  <div class="map-wall h" style="left:665px;top:835px;width:470px"></div><div class="map-wall h" style="left:665px;top:1111px;width:470px"></div><div class="map-wall v" style="left:665px;top:835px;height:300px"></div><div class="map-wall v" style="left:1111px;top:835px;height:300px"></div>
+  <div class="map-wall h" style="left:1260px;top:835px;width:470px"></div><div class="map-wall h" style="left:1260px;top:1111px;width:470px"></div><div class="map-wall v" style="left:1260px;top:835px;height:300px"></div><div class="map-wall v" style="left:1706px;top:835px;height:300px"></div>
+  <!-- doors -->
+  <div class="map-door h" data-door="ob-bottom" style="left:270px;top:331px"></div><div class="map-door h" data-door="fossil-bottom" style="left:865px;top:331px"></div><div class="map-door h" data-door="lib-bottom" style="left:1460px;top:331px"></div>
+  <div class="map-door h" data-door="west-top" style="left:270px;top:420px"></div><div class="map-door h" data-door="hall-top" style="left:865px;top:420px"></div><div class="map-door h" data-door="east-top" style="left:1460px;top:420px"></div>
+  <div class="map-door h" data-door="west-bottom" style="left:270px;top:721px"></div><div class="map-door h" data-door="hall-bottom" style="left:865px;top:721px"></div><div class="map-door h" data-door="east-bottom" style="left:1460px;top:721px"></div>
+  <div class="map-door h" data-door="lab-top" style="left:270px;top:810px"></div><div class="map-door h" data-door="kitchen-top" style="left:865px;top:810px"></div><div class="map-door h" data-door="green-top" style="left:1460px;top:810px"></div>
+</div></div><div id="joystick" class="joystick" aria-label="movement joystick"></div>
+</div>
+<div class="move-hint">🎮 <b>Move:</b> WASD / Arrow Keys &nbsp; • &nbsp; Mobile joystick supported &nbsp; • &nbsp; Explore the mansion with the camera following you.</div>
+<div class="ability-panel">
+ <div class="ability"><span>🗺️</span><b>Map</b><small>See the mansion</small></div>
+ <div class="ability"><span>📋</span><b>Tasks</b><small>Answer questions</small></div>
+ <div class="ability"><span>📢</span><b>Report</b><small>Report after a question</small></div>
+ <div class="ability"><span>💨</span><b>Vent</b><small>Special roles</small></div>
+</div>
+<div class="proximity" id="proximityHint">Explore the mansion and approach a glowing task station.</div>
+<div class="actions">
+<button class="primary" onclick="taskQuestion()">DO NEARBY TASK</button>
+<button id="emergencyBtn" class="secondary" onclick="emergencyMeeting()">🚨 EMERGENCY MEETING</button>
+<button id="reportBodyBtn" class="danger hidden" onclick="reportBody()">📢 REPORT KNOCKED-OUT PLAYER</button>
+<button class="secondary" onclick="report()">REPORT</button>
+<button class="secondary" id="ventBtn" onclick="vent()">VENT</button>
+<button class="secondary" id="medicBtn" onclick="revive()">REVIVE</button>
+<button class="danger" id="knockBtn" onclick="knock()">KNOCK OUT</button>
+<button class="danger" id="eatBtn" onclick="eat()">EAT</button>
+</div>
+<div class="question hidden" id="questionBox"></div>
+<div class="meeting hidden" id="meetingBox"></div>
+<h3>Game Log</h3><div class="log" id="log"></div>
+</div>
+</section>
+
+<script>
+const dinos=[
+"Kaprosuchus","Megatherium","Kopidodon","Triceratops","Stegosaurus","Pteranodon","Ankylosaurus","Velociraptor","Tyrannosaurus","Spinosaurus",
+"Parasaurolophus","Brachiosaurus","Diplodocus","Iguanodon","Allosaurus","Pachycephalosaurus","Mosasaurus","Deinocheirus","Archaeopteryx","Therizinosaurus"
+];
+const roles=[
+["Normy","Crewmate","Complete tasks to win.","normy"],["Electrician","Crewmate","Can vent to get around quickly; complete tasks.","elec"],
+["Medic","Crewmate","Can revive knocked-out players; complete tasks.","medic"],["The Bonker","Imposter","Knock players out to win; can vent.","bonker"],
+["Shadow Bonker","Imposter","Knock players out; become invisible for 5 seconds afterward.","shadow"],
+["Mr. Yum","Neutral","Eat players to win; on no one's team.","yum"]
+];
+let state={code:"",players:[],me:null,tasks:0,knocked:[],role:null,grade:"5th Grade",meeting:false,completedTasks:[]};
+
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function createLobby(){
+ state.code=(document.getElementById('code').value||Math.random().toString(36).slice(2,8)).toUpperCase();
+ state.players=[{name:document.getElementById('name').value||"Player 1",dino:dinos[0],ready:true,role:null}];
+ state.me=state.players[0];state.grade=document.getElementById('grade').value;renderLobby();
+}
+function joinLobby(){createLobby();log("Joined lobby "+state.code+". (Prototype mode: this browser hosts the lobby.)")}
+function renderLobby(){
+ document.getElementById('lobby').classList.remove('hidden');document.getElementById('lobbyTitle').textContent="LOBBY CODE: "+state.code;
+ document.getElementById('count').textContent=state.players.length;
+ document.getElementById('minimum').textContent=state.players.length>=4?"Ready to start!":"Need at least 4 players.";
+ document.getElementById('startBtn').disabled=state.players.length<4;
+ document.getElementById('players').innerHTML=state.players.map((p,i)=>`<div class="dino ${p===state.me?'selected':''}"><b>${p.dino}</b><span>${p.name} ${p===state.me?'(You)':''}</span></div>`).join('');
+ document.getElementById('dinos').innerHTML=dinos.map((d,i)=>`<div class="dino ${state.me.dino===d?'selected':''}" onclick="chooseDino('${d}')"><b>${d}</b><span>Dinosaur #${i+1}</span></div>`).join('');
+}
+function chooseDino(d){state.me.dino=d;renderLobby()}
+function addBot(){
+ if(state.players.length>=10)return;
+ const d=dinos[state.players.length%dinos.length];
+ state.players.push({name:"DinoBot "+state.players.length,dino:d,ready:true,role:null});
+ renderLobby();
+}
+function assignRoles(){
+ const n=state.players.length;
+ state.players.forEach(p=>p.role=null);
+ let pool=n>=6?["Normy","Electrician","Medic","The Bonker","Shadow Bonker","Mr. Yum"]:n===5?["Normy","Electrician","Medic","The Bonker","Shadow Bonker"]:["Normy","Normy","Medic","The Bonker"];
+ pool=pool.sort(()=>Math.random()-0.5);
+ state.players.forEach((p,i)=>p.role=pool[i]||"Normy");
+ state.me.role=state.me.role;
+}
+function startGame(){
+ if(state.players.length<4)return;
+ assignRoles();state.tasks=0;state.knocked=[];state.role=state.me.role;movement.x=50;movement.y=50;
+ document.getElementById('gameCode').textContent=state.code;document.getElementById('roleName').textContent=state.role;
+ ["ventBtn","medicBtn","knockBtn","eatBtn"].forEach(id=>document.getElementById(id).classList.add('hidden'));
+ if(["Electrician","The Bonker","Shadow Bonker"].includes(state.role))document.getElementById('ventBtn').classList.remove('hidden');
+ if(state.role==="Medic")document.getElementById('medicBtn').classList.remove('hidden');
+ if(["The Bonker","Shadow Bonker"].includes(state.role))document.getElementById('knockBtn').classList.remove('hidden');
+ if(state.role==="Mr. Yum")document.getElementById('eatBtn').classList.remove('hidden');
+ document.getElementById('taskfill').style.width="0%";
+ showRoleReveal();
+ log("Game started! You are "+state.role+". Grade: "+state.grade+".");
+}
+
+const dinoColors=["#6fbd3b","#b99761","#8565b7","#4b9ed8","#d98c31","#c94d48","#4db4a3","#c8669b","#929aa5","#d9783f"];
+const speciesClass={"Triceratops":"horn","Stegosaurus":"plates","Tyrannosaurus":"large","Spinosaurus":"sail","Brachiosaurus":"long","Diplodocus":"long","Parasaurolophus":"crest","Pteranodon":"winged","Archaeopteryx":"winged","Ankylosaurus":"armor","Therizinosaurus":"claws","Pachycephalosaurus":"dome","Mosasaurus":"fin","Deinocheirus":"arms","Velociraptor":"small","Allosaurus":"large"};
+const dinoAccent={Kaprosuchus:"#5b8f4a",Megatherium:"#a9784d",Kopidodon:"#c48c4c",Triceratops:"#e8c35a",Stegosaurus:"#e79b46",Pteranodon:"#86b9d9",Ankylosaurus:"#66754c",Velociraptor:"#d4c36b",Tyrannosaurus:"#9b5361",Spinosaurus:"#d58d4c",Parasaurolophus:"#c56c9d",Brachiosaurus:"#72a85a",Diplodocus:"#6e9cbd",Iguanodon:"#8bbd5b",Allosaurus:"#b85d4d",Pachycephalosaurus:"#a987d1",Mosasaurus:"#4b9e9a",Deinocheirus:"#b77d55",Archaeopteryx:"#8a75a7",Therizinosaurus:"#6da26b"};
+const movement={x:50,y:50,speed:.22,keys:{},moving:false,angle:0};
+function updateCamera(){const map=document.getElementById('map'),world=document.getElementById('world');if(!map||!world)return;const vw=map.clientWidth,vh=map.clientHeight,scale=Math.max(vw/900,vh/650)*1.62;const px=movement.x/100*1800,py=movement.y/100*1200;let tx=vw/2-px*scale,ty=vh/2-py*scale;const minX=vw-1800*scale,minY=vh-1200*scale;tx=Math.min(0,Math.max(minX,tx));ty=Math.min(0,Math.max(minY,ty));world.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;}
+const roleInfo={
+"Normy":["Crewmate","Complete educational tasks. Finish the task bar or identify the imposters."],
+"Electrician":["Crewmate","Complete tasks and use vents to travel between parts of the mansion quickly."],
+"Medic":["Crewmate","Complete tasks and revive a knocked-out player."],
+"The Bonker":["Imposter","Knock players out, use vents, and avoid being caught."],
+"Shadow Bonker":["Imposter","Knock players out. After a knockout, become invisible for 5 seconds."],
+"Mr. Yum":["Neutral","You are on nobody's team. Eat enough players to achieve your own victory condition."]
+};
+function dinoSVG(color,species,knocked=false){
+ const cls=speciesClass[species]||""; const accent=dinoAccent[species]||"#dce36a";
+ if(knocked)return `<svg viewBox="0 0 78 78" aria-label="${species} knocked out"><g transform="translate(3 8) rotate(8 36 34)"><ellipse cx="36" cy="54" rx="28" ry="8" fill="#111" opacity=".32"/><path d="M11 42 Q22 24 49 30 Q59 34 60 43 Q45 52 24 50Z" fill="${color}" stroke="#17202d" stroke-width="3"/><circle cx="56" cy="32" r="10" fill="${color}" stroke="#17202d" stroke-width="3"/><path d="M59 29 l10 3 l-10 4" fill="${color}" stroke="#17202d" stroke-width="2"/><path d="M8 42 Q0 36 3 29" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round"/><path d="M25 47 l-8 10 M42 48 l8 9" stroke="${color}" stroke-width="7" stroke-linecap="round"/><text x="4" y="14" font-size="10" font-weight="900" fill="#fff">KO</text></g></svg>`;
+ const horns=cls==="horn"?`<path d="M41 15 L44 3 L49 15 M52 15 L60 5 L58 17" fill="${accent}" stroke="#17202d" stroke-width="2"/>`:"";
+ const plates=cls==="plates"?`<path d="M20 34 L16 21 L25 25 L29 12 L35 25 L41 10 L46 27 L53 17 L51 34" fill="${accent}" stroke="#17202d" stroke-width="2"/>`:"";
+ const sail=cls==="sail"?`<path d="M28 30 L30 10 L39 20 L48 8 L49 34Z" fill="${accent}" stroke="#17202d" stroke-width="2"/>`:"";
+ const crest=cls==="crest"?`<path d="M45 15 Q61 6 68 18 L59 29 L47 25Z" fill="${accent}" stroke="#17202d" stroke-width="2"/>`:"";
+ const wings=cls==="winged"?`<path d="M30 31 Q8 8 3 22 Q12 39 32 41Z" fill="${accent}" stroke="#17202d" stroke-width="2"/>`:"";
+ const armor=cls==="armor"?`<circle cx="23" cy="35" r="6" fill="${accent}" stroke="#17202d" stroke-width="2"/><circle cx="35" cy="38" r="6" fill="${accent}" stroke="#17202d" stroke-width="2"/>`:"";
+ const claws=cls==="claws"?`<path d="M49 45 l10 8 M52 42 l12 3 M55 39 l11 -3" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>`:"";
+ const dome=cls==="dome"?`<ellipse cx="49" cy="18" rx="13" ry="8" fill="${accent}" stroke="#17202d" stroke-width="2"/>`:"";
+ const fin=cls==="fin"?`<path d="M28 47 Q10 39 8 52 Q20 58 32 55Z" fill="${accent}" stroke="#17202d" stroke-width="2"/>`:"";
+ const arms=cls==="arms"?`<path d="M27 40 L12 52 M31 43 L18 59" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`:"";
+ const headW=cls==="large"?18:15, bodyW=cls==="large"?22:18;
+ const long=cls==="long"?`<path d="M43 31 Q62 20 73 26" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"/>`:"";
+ const marking={
+  Kaprosuchus:`<path d="M18 37 L27 31 M15 42 L25 37" stroke="${accent}" stroke-width="4"/>`,
+  Megatherium:`<path d="M28 33 Q36 28 43 33" fill="none" stroke="${accent}" stroke-width="5"/>`,
+  Kopidodon:`<circle cx="30" cy="39" r="4" fill="${accent}"/><circle cx="40" cy="43" r="3" fill="${accent}"/>`,
+  Triceratops:`<path d="M37 35 Q43 39 48 35" fill="none" stroke="${accent}" stroke-width="4"/>`,
+  Stegosaurus:`<circle cx="29" cy="40" r="3" fill="${accent}"/><circle cx="38" cy="44" r="3" fill="${accent}"/>`,
+  Pteranodon:`<path d="M17 27 Q25 20 32 25" fill="none" stroke="${accent}" stroke-width="3"/>`,
+  Ankylosaurus:`<path d="M25 34 L30 30 L35 34 L40 30 L45 34" fill="none" stroke="${accent}" stroke-width="3"/>`,
+  Velociraptor:`<path d="M29 35 L35 31 M35 39 L41 35" stroke="${accent}" stroke-width="3"/>`,
+  Tyrannosaurus:`<path d="M43 31 l4 3 l4 -3 l4 3" fill="none" stroke="#fff" stroke-width="2"/>`,
+  Spinosaurus:`<path d="M18 44 Q28 48 38 44" fill="none" stroke="${accent}" stroke-width="4"/>`,
+  Parasaurolophus:`<path d="M34 36 Q42 31 50 36" fill="none" stroke="${accent}" stroke-width="4"/>`,
+  Brachiosaurus:`<path d="M30 31 Q38 26 46 31" fill="none" stroke="${accent}" stroke-width="4"/>`,
+  Diplodocus:`<path d="M20 43 Q30 48 40 43" fill="none" stroke="${accent}" stroke-width="4"/>`,
+  Iguanodon:`<path d="M28 35 L33 31 L38 35 L43 31" fill="none" stroke="${accent}" stroke-width="3"/>`,
+  Allosaurus:`<path d="M38 28 l3 -5 l4 5" fill="${accent}" stroke="#17202d" stroke-width="2"/>`,
+  Pachycephalosaurus:`<circle cx="47" cy="18" r="4" fill="${accent}"/>`,
+  Mosasaurus:`<path d="M18 48 Q28 54 38 48" fill="none" stroke="${accent}" stroke-width="5"/>`,
+  Deinocheirus:`<path d="M22 48 l-8 7 M25 50 l-7 10" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>`,
+  Archaeopteryx:`<path d="M12 30 L24 36 L12 41" fill="${accent}" stroke="#17202d" stroke-width="2"/>`,
+  Therizinosaurus:`<path d="M43 43 l10 7 M46 40 l12 3" stroke="${accent}" stroke-width="3" stroke-linecap="round"/>`
+ }[species]||`<circle cx="34" cy="40" r="3" fill="${accent}"/>`;
+ return `<svg viewBox="0 0 78 78" aria-label="${species}"><g class="bodybob">${marking}${plates}${sail}${crest}${wings}${armor}${claws}${dome}${fin}${arms}${long}<path d="M29 41 Q13 46 5 38 Q15 36 26 30" fill="${color}" stroke="#17202d" stroke-width="3"/><ellipse cx="37" cy="42" rx="${bodyW}" ry="18" fill="${color}" stroke="#17202d" stroke-width="3"/><ellipse cx="48" cy="27" rx="${headW}" ry="14" fill="${color}" stroke="#17202d" stroke-width="3"/>${horns}<path d="M57 27 L72 30 L57 35Z" fill="${color}" stroke="#17202d" stroke-width="3"/><ellipse cx="53" cy="24" rx="4" ry="5" fill="#fff" stroke="#17202d" stroke-width="2"/><circle cx="54" cy="25" r="2" fill="#111"/><path class="legA" d="M28 51 L24 69" stroke="${color}" stroke-width="8" stroke-linecap="round"/><path class="legB" d="M45 51 L49 69" stroke="${color}" stroke-width="8" stroke-linecap="round"/><path d="M21 69 L16 69 M49 69 L55 69" stroke="#17202d" stroke-width="3" stroke-linecap="round"/></g></svg>`;
+}
+function spriteHTML(p,index){const color=dinoColors[index%dinoColors.length];const ko=state.knocked.includes(p.name);return `<div class="dino-character ${ko?'knocked ':''}${p===state.me?'me ':''}" data-player="${String(p.name).replace(/"/g,'&quot;')}" style="--dino-color:${color}">${dinoSVG(color,p.dino,ko)}<div class="name-tag">${p.name}</div><div class="ko-badge">KNOCKED OUT</div></div>`}
+function playerWorldPos(p,i){return p===state.me?{x:movement.x/100*1800,y:movement.y/100*1200}:{x:180+(i%4)*470,y:180+Math.floor(i/4)*280}}
+const taskDefs=[{id:'t1',x:180,y:180,name:'Calibrate Telescope'},{id:'t2',x:900,y:180,name:'Catalog Fossil'},{id:'t3',x:1495,y:180,name:'Sort Books'},{id:'t4',x:210,y:575,name:'Study Map'},{id:'t5',x:900,y:575,name:'Hall Display'},{id:'t6',x:1495,y:575,name:'Water Plants'},{id:'t7',x:200,y:975,name:'Analyze DNA Sample'},{id:'t8',x:900,y:975,name:'Measure Nutrients'},{id:'t9',x:1495,y:975,name:'Plant Seedling'},{id:'t10',x:410,y:250,name:'Chart Constellation'},{id:'t11',x:1040,y:250,name:'Label Fossil Layer'},{id:'t12',x:1390,y:250,name:'Archive Specimen'},{id:'t13',x:410,y:650,name:'Decode Expedition Map'},{id:'t14',x:1040,y:650,name:'Restore Hall Display'},{id:'t15',x:1390,y:650,name:'Test Ecosystem'},{id:'t16',x:420,y:1040,name:'Sequence DNA'},{id:'t17',x:1040,y:1040,name:'Prepare Food Sample'},{id:'t18',x:1390,y:1040,name:'Grow Seed Culture'}];
+const roomAreas=[{id:'observatory',x:70,y:55,w:470,h:300},{id:'fossil',x:665,y:55,w:470,h:300},{id:'library',x:1260,y:55,w:470,h:300},{id:'west',x:70,y:445,w:470,h:300},{id:'hall',x:665,y:445,w:470,h:300},{id:'east',x:1260,y:445,w:470,h:300},{id:'lab',x:70,y:835,w:470,h:300},{id:'kitchen',x:665,y:835,w:470,h:300},{id:'green',x:1260,y:835,w:470,h:300}];
+function currentRoom(){const x=movement.x/100*1800,y=movement.y/100*1200;return roomAreas.find(r=>x>r.x+8&&x<r.x+r.w-8&&y>r.y+8&&y<r.y+r.h-8)?.id||null}
+function updateOcclusion(){const room=currentRoom();document.querySelectorAll('.room-roof').forEach(r=>r.classList.toggle('inside',r.dataset.roof===room));}
+function updateTasksVisual(){taskDefs.forEach(t=>{const el=document.querySelector(`[data-task-id="${t.id}"]`);if(el)el.classList.toggle('done',state.completedTasks.includes(t.id));});}
+function nearestTask(){const x=movement.x/100*1800,y=movement.y/100*1200;let best=null,bd=Infinity;for(const t of taskDefs){if(state.completedTasks.includes(t.id))continue;const d=Math.hypot(x-t.x,y-t.y);if(d<bd){bd=d;best=t}}return bd<115?best:null}
+function nearestKnocked(){const x=movement.x/100*1800,y=movement.y/100*1200;let best=null,bd=Infinity;state.players.forEach((p,i)=>{if(!state.knocked.includes(p.name))return;const q=playerWorldPos(p,i),d=Math.hypot(x-q.x,y-q.y);if(d<bd){bd=d;best={p,i,d}}});return best&&best.d<125?best:null}
+function updateProximity(){const t=nearestTask(),k=nearestKnocked(),hint=document.getElementById('proximityHint'),rb=document.getElementById('reportBodyBtn'),vb=document.getElementById('ventBtn');const x=movement.x/100*1800,y=movement.y/100*1200;const nearVent=ventDefs?.some(v=>Math.hypot(x-v.x,y-v.y)<95);if(t)hint.textContent=`🟢 ${t.name} is nearby — press DO NEARBY TASK.`;else if(k)hint.textContent=`📍 ${k.p.name} is nearby — you can report them.`;else if(nearVent)hint.textContent='💨 Vent nearby — use VENT to travel through the network.';else hint.textContent='Explore the mansion and approach a glowing task station.';if(rb)rb.classList.toggle('hidden',!k);if(vb&&["Electrician","The Bonker","Shadow Bonker"].includes(state.role))vb.classList.toggle('disabled-action',!nearVent);}
+function renderCharacters(){const world=document.getElementById('world');if(!world)return;world.querySelectorAll('.dino-character').forEach(x=>x.remove());state.players.forEach((p,i)=>{const holder=document.createElement('div');holder.innerHTML=spriteHTML(p,i);const char=holder.firstElementChild;const q=playerWorldPos(p,i);char.style.left=q.x+'px';char.style.top=q.y+'px';world.appendChild(char)})}
+function placePlayers(){renderCharacters();updateCamera()}
+function setWalking(on){movement.moving=on;const me=document.querySelector('.dino-character.me');if(me)me.classList.toggle('walking',on)}
+function doorOpen(door){return Math.hypot(movement.x/100*1800-door.x,movement.y/100*1200-door.y)<92;}
+const doorDefs=[
+{id:'ob-bottom',x:305,y:343},{id:'fossil-bottom',x:900,y:343},{id:'lib-bottom',x:1495,y:343},
+{id:'west-top',x:305,y:432},{id:'hall-top',x:900,y:432},{id:'east-top',x:1495,y:432},
+{id:'west-bottom',x:305,y:709},{id:'hall-bottom',x:900,y:709},{id:'east-bottom',x:1495,y:709},
+{id:'lab-top',x:305,y:822},{id:'kitchen-top',x:900,y:822},{id:'green-top',x:1495,y:822}];
+const roomRects=[{x:70,y:55,w:470,h:300,doors:['ob-bottom']},{x:665,y:55,w:470,h:300,doors:['fossil-bottom']},{x:1260,y:55,w:470,h:300,doors:['lib-bottom']},{x:70,y:445,w:470,h:300,doors:['west-top','west-bottom']},{x:665,y:445,w:470,h:300,doors:['hall-top','hall-bottom']},{x:1260,y:445,w:470,h:300,doors:['east-top','east-bottom']},{x:70,y:835,w:470,h:300,doors:['lab-top']},{x:665,y:835,w:470,h:300,doors:['kitchen-top']},{x:1260,y:835,w:470,h:300,doors:['green-top']}];
+function nearDoorForWall(x,y){return doorDefs.some(d=>Math.hypot(x-d.x,y-d.y)<82);}
+function blockedByWalls(x,y){const r=18;for(const q of roomRects){const insideX=x>q.x-r&&x<q.x+q.w+r,insideY=y>q.y-r&&y<q.y+q.h+r;if(!insideX&&!insideY)continue;
+ const walls=[['top',q.y],['bottom',q.y+q.h],['left',q.x],['right',q.x+q.w]];for(const [side,pos] of walls){let hit=false;if(side==='top'||side==='bottom')hit=y>=pos-r&&y<=pos+r&&x>=q.x-r&&x<=q.x+q.w+r;else hit=x>=pos-r&&x<=pos+r&&y>=q.y-r&&y<=q.y+q.h+r;if(hit&&!nearDoorForWall(x,y))return true;}}return false;}
+function updateDoors(){doorDefs.forEach(d=>{const el=document.querySelector('[data-door="'+d.id+'"]');if(!el)return;const open=doorOpen(d);el.classList.toggle('open',open);});}
+function updateMovement(){if(document.getElementById('game')?.classList.contains('active')&&!document.querySelector('.target-modal')&&!state.knocked.includes(state.me?.name)){let dx=0,dy=0;if(movement.keys.ArrowLeft||movement.keys.a)dx--;if(movement.keys.ArrowRight||movement.keys.d)dx++;if(movement.keys.ArrowUp||movement.keys.w)dy--;if(movement.keys.ArrowDown||movement.keys.s)dy++;if(dx||dy){const len=Math.hypot(dx,dy);dx/=len;dy/=len;const nx=Math.max(5,Math.min(95,movement.x+dx*movement.speed)),ny=Math.max(5,Math.min(95,movement.y+dy*movement.speed));const wx=nx/100*1800,wy=ny/100*1200;if(!blockedByWalls(wx,wy)){movement.x=nx;movement.y=ny;}setWalking(true);const me=document.querySelector('.dino-character.me');if(me)me.style.transform=`translate(-50%,-78%) ${dx<0?'scaleX(-1)':'scaleX(1)'}`}else setWalking(false);const me=document.querySelector('.dino-character.me');if(me){me.style.left=(movement.x/100*1800)+'px';me.style.top=(movement.y/100*1200)+'px'}updateDoors();updateOcclusion();updateProximity();updateTasksVisual();updateCamera()}requestAnimationFrame(updateMovement)}
+document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key)){movement.keys[e.key]=true;e.preventDefault()}});document.addEventListener('keyup',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key))movement.keys[e.key]=false});
+(function(){const j=document.getElementById('joystick');if(!j)return;let active=false,cx=0,cy=0;function point(e){const t=e.touches?e.touches[0]:e;return [t.clientX,t.clientY]}function move(e){if(!active)return;const [x,y]=point(e),dx=x-cx,dy=y-cy;movement.keys.a=dx<-12;movement.keys.d=dx>12;movement.keys.w=dy<-12;movement.keys.s=dy>12;if(e.cancelable)e.preventDefault()}function end(){active=false;movement.keys.a=movement.keys.d=movement.keys.w=movement.keys.s=false}j.addEventListener('touchstart',e=>{active=true;const r=j.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;e.preventDefault()},{passive:false});j.addEventListener('touchmove',move,{passive:false});j.addEventListener('touchend',end);j.addEventListener('mousedown',e=>{active=true;const r=j.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2});window.addEventListener('mousemove',move);window.addEventListener('mouseup',end)})();
+window.addEventListener('resize',updateCamera);
+requestAnimationFrame(updateMovement);
+function buildGallery(){const el=document.getElementById('spriteGallery');if(!el)return;el.innerHTML=dinos.map((d,i)=>`<div class="sprite-card"><div class="dino-sprite">${dinoSVG(dinoColors[i%dinoColors.length],d,false)}</div><b>${d}</b><small>Playable dino</small></div>`).join('')}
+function showRoleReveal(){document.getElementById('revealRole').textContent=state.role.toUpperCase();document.getElementById('revealTeam').textContent=roleInfo[state.role][0].toUpperCase();document.getElementById('revealDesc').textContent=roleInfo[state.role][1];document.getElementById('revealDino').innerHTML=dinoSVG(dinoColors[dinos.indexOf(state.me.dino)%dinoColors.length],state.me.dino,false);const card=document.getElementById('revealCard');card.style.borderColor=({Normy:'#5ca9e6',Electrician:'#e4c83e',Medic:'#67d56b','The Bonker':'#ef5b4d','Shadow Bonker':'#9c70ff','Mr. Yum':'#f09a3e'})[state.role]||'#6b7b96';show('reveal')}
+function enterGameFromReveal(){show('game');placePlayers();updateOcclusion();updateProximity();updateTasksVisual();log('Welcome to the mansion. Use WASD/arrow keys to move.');}
+
+const qs={
+"3rd Grade":[["Math","What is 7 + 6?",["11","12","13","14"],2],["Science","Which is a living thing?",["Rock","Plant","Cloud","Pencil"],1],["Reading","Which word is a noun?",["Run","Blue","Dinosaur","Quickly"],2]],
+"4th Grade":[["Math","What is 9 × 6?",["45","54","63","72"],1],["Science","What do plants use sunlight to make?",["Food","Plastic","Metal","Glass"],0],["Geography","Which is a continent?",["Pacific","Asia","Atlantic","Nile"],1]],
+"5th Grade":[["Math","What is 1/2 + 1/4?",["1/4","1/2","3/4","1"],2],["Science","What is the process of a plant making food using sunlight?",["Erosion","Photosynthesis","Condensation","Digestion"],1],["History","Which ancient civilization built pyramids at Giza?",["Roman","Mayan","Egyptian","Viking"],2]],
+"6th Grade":[["Math","What is 15% of 200?",["15","20","30","40"],2],["Science","What force pulls objects toward Earth?",["Friction","Gravity","Magnetism","Buoyancy"],1],["Geography","What is Earth's largest ocean?",["Atlantic","Indian","Pacific","Arctic"],2]],
+"7th Grade":[["Math","Solve: 3x = 21.",["5","6","7","8"],2],["Science","Which organelle is called the cell's powerhouse?",["Nucleus","Ribosome","Mitochondrion","Cell wall"],2],["History","The Renaissance began in which country?",["Italy","Japan","Canada","Brazil"],0]],
+"8th Grade":[["Math","What is the slope of y = 2x + 5?",["2","5","-2","-5"],0],["Science","What is H2O?",["Oxygen","Hydrogen","Water","Salt"],2],["Civics","Which branch interprets laws in the U.S.?",["Executive","Legislative","Judicial","Local"],2]],
+"9th Grade":[["Math","What is √144?",["10","11","12","14"],2],["Biology","DNA is best described as what?",["A sugar","Genetic material","A mineral","A vitamin"],1],["Physics","Speed equals distance divided by what?",["Mass","Time","Force","Energy"],1]],
+"10th Grade":[["Algebra","Solve: 2x + 4 = 14.",["4","5","6","7"],1],["Biology","What process makes ATP in cells?",["Cellular respiration","Evaporation","Erosion","Freezing"],0],["Chemistry","A substance with pH 7 is generally what?",["Acidic","Basic","Neutral","Radioactive"],2]],
+"11th Grade":[["Algebra","What is the derivative of x²?",["x","2x","x²","2"],1],["Chemistry","What is the atomic number of carbon?",["4","6","8","12"],1],["Physics","Newton's first law is also called the law of what?",["Acceleration","Inertia","Gravity","Momentum"],1]],
+"12th Grade":[["Calculus","What is ∫1 dx?",["x + C","1 + C","x² + C","0"],0],["Biology","What carries amino acids to ribosomes?",["tRNA","DNA","ATP","Lipids"],0],["Physics","What is the SI unit of electric current?",["Volt","Ohm","Ampere","Watt"],2]]
+};
+let pendingQuestionCallback=null;
+function question(kind,callback){
+ const arr=qs[state.grade]||qs["5th Grade"], q=arr[Math.floor(Math.random()*arr.length)];
+ pendingQuestionCallback=callback;
+ const box=document.getElementById('questionBox');box.classList.remove('hidden');
+ box.innerHTML=`<div class="task-head"><div><b>${kind}: ${q[0]}</b><p class="sub">📍 Mansion Education Terminal • ${state.grade}</p></div><div class="task-art">🧠</div></div><h3>${q[1]}</h3><div class="answers">${q[2].map((a,i)=>`<button onclick="answer(${i},${q[3]})">${String.fromCharCode(65+i)}. ${a}</button>`).join('')}</div>`;
+}
+function answer(i,correct){
+ const cb=pendingQuestionCallback;pendingQuestionCallback=null;
+ const box=document.getElementById('questionBox');box.classList.add('hidden');
+ if(i===correct){log("Correct!");if(cb)cb(true)}else{log("Incorrect. You cannot perform that action right now.");if(cb)cb(false)}
+}
+function taskQuestion(){if(!["Normy","Electrician","Medic"].includes(state.role)){log("Your role does not use normal crew tasks.");return}const t=nearestTask();if(!t){log("Move closer to a glowing task station first.");return}question("Task: "+t.name,ok=>taskResult(ok,t))}
+function taskResult(ok,t){if(ok){state.completedTasks.push(t.id);state.tasks=Math.min(100,state.tasks+Math.round(100/taskDefs.length));document.getElementById('taskfill').style.width=state.tasks+"%";updateTasksVisual();log("Task complete: "+t.name);if(state.tasks>=100)log("All tasks complete — CREWMATES WIN!");}}
+function emergencyMeeting(){question("Emergency meeting question",ok=>{if(ok)meeting("Emergency meeting called!")})}
+function reportBody(){const k=nearestKnocked();if(!k){log("Move closer to a knocked-out player to report them.");return}question("Report knocked-out player",ok=>{if(ok)meeting(k.p.name+" was reported!")})}
+function report(){const k=nearestKnocked();if(k)reportBody();else emergencyMeeting()}
+function meeting(message="A knocked-out player was reported."){const box=document.getElementById('meetingBox');box.classList.remove('hidden');box.innerHTML=`<h2>EMERGENCY MEETING</h2><p>${message} Answer a question to vote.</p><button class="primary" onclick="voteQuestion()">VOTE</button><button class="secondary" onclick="closeMeeting()">CLOSE</button>`}
+function voteQuestion(){
+ question("Voting question",function(ok){
+   if(!ok)return;
+   openVoteChoice();
+ });
+}
+function openVoteChoice(){
+ const box=document.getElementById("meetingBox");box.classList.remove("hidden");
+ const alive=state.players.filter(p=>!state.knocked.includes(p.name));
+ box.innerHTML=`<h2>🗳️ CHOOSE WHO TO VOTE FOR</h2><p class="sub">Select a player. Your vote will be cast for the dinosaur you choose.</p>
+ <div class="voting-grid">${alive.map((p,i)=>`
+ <button class="vote-player" onclick="castVote('${p.name.replace(/'/g,"\\'")}')">
+  <span class="vote-avatar">${dinoSVG(dinoColors[i%dinoColors.length],p.dino,false)}</span><span><b>${p.name}</b><br><small>${p.dino}</small></span>
+ </button>`).join("")}</div>
+ <div class="actions"><button class="secondary" onclick="closeMeeting()">CANCEL</button></div>`;
+}
+function castVote(name){
+ log("You voted for "+name+".");
+ const target=state.players.find(p=>p.name===name);
+ if(target && target!==state.me && target.role && ["The Bonker","Shadow Bonker"].includes(target.role)){
+   log("Your vote landed on an imposter!");
+ }else log("The meeting continues while the players compare votes.");
+ closeMeeting();
+}
+function closeMeeting(){document.getElementById('meetingBox').classList.add('hidden')}
+const ventDefs=[{id:'v1',x:465,y:205,to:'v2',label:'Fossil Gallery / Grand Hall'},{id:'v2',x:1060,y:600,to:'v3',label:'Greenhouse / West Wing'},{id:'v3',x:1320,y:970,to:'v4',label:'Science Lab / Greenhouse'},{id:'v4',x:420,y:960,to:'v1',label:'Observatory / Science Lab'}];
+function vent(){if(!["Electrician","The Bonker","Shadow Bonker"].includes(state.role)){log("Only vent-capable roles can use vents.");return}const x=movement.x/100*1800,y=movement.y/100*1200;const here=ventDefs.find(v=>Math.hypot(x-v.x,y-v.y)<95);if(!here){log("Move close to a vent first.");return}const dest=ventDefs.find(v=>v.id===here.to);movement.x=dest.x/1800*100;movement.y=dest.y/1200*100;updateCamera();renderCharacters();updateOcclusion();updateProximity();log("You traveled through the vent network.")}
+function knock(){chooseTarget("KNOCK OUT",function(t){
+ state.knocked.push(t.name);renderCharacters();log(t.name+" was knocked out.");
+ if(state.role==="Shadow Bonker"){document.querySelector('.dino-character.me')?.classList.add('shadowing');log('Shadow Bonker is invisible for 5 seconds.');setTimeout(()=>{document.querySelector('.dino-character.me')?.classList.remove('shadowing');log('You are visible again.');},5000)}
+})}
+function chooseTarget(action,callback){const targets=state.players.filter(p=>p!==state.me&&!state.knocked.includes(p.name));if(!targets.length){log('No available target.');return}const modal=document.createElement('div');modal.className='target-modal';modal.innerHTML=`<div class="target-card"><h2>${action}</h2><p class="sub">Choose a player.</p><div class="voting-grid">${targets.map((p,i)=>`<button class="vote-player" data-name="${p.name.replace(/"/g,'&quot;')}"><span class="vote-avatar">${dinoSVG(dinoColors[i%dinoColors.length],p.dino,false)}</span><span><b>${p.name}</b><br><small>${p.dino}</small></span></button>`).join('')}</div><div class="actions"><button class="secondary" id="cancelTarget">CANCEL</button></div></div>`;document.body.appendChild(modal);modal.querySelector('#cancelTarget').onclick=()=>modal.remove();modal.querySelectorAll('.vote-player').forEach(btn=>btn.onclick=()=>{const p=targets.find(x=>x.name===btn.dataset.name);modal.remove();callback(p)})}
+function eat(){chooseTarget('MR. YUM — CHOOSE A PLAYER',function(t){state.knocked.push(t.name);renderCharacters();log('Mr. Yum ate '+t.name+'.')})}
+function revive(){const names=[...state.knocked];if(!names.length){log("Nobody is knocked out.");return}const modal=document.createElement("div");modal.className="target-modal";modal.innerHTML=`<div class="target-card"><h2>🩺 REVIVE A PLAYER</h2><p class="sub">Choose the knocked-out player you want to revive.</p><div class="voting-grid">${names.map((n,i)=>`<button class="vote-player" data-name="${n.replace(/"/g,"&quot;")}"><span class="vote-avatar">🩺</span><span><b>${n}</b><br><small>Knocked out</small></span></button>`).join("")}</div><div class="actions"><button class="secondary" id="cancelRevive">CANCEL</button></div></div>`;document.body.appendChild(modal);modal.querySelector("#cancelRevive").onclick=()=>modal.remove();modal.querySelectorAll(".vote-player").forEach(b=>b.onclick=()=>{const n=b.dataset.name;state.knocked=state.knocked.filter(x=>x!==n);modal.remove();renderCharacters();log("Medic revived "+n+".")})}
+function log(s){const el=document.getElementById('log');el.innerHTML+=`<div>• ${s}</div>`;el.scrollTop=el.scrollHeight}
+</script>
+</body>
+</html>
